@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use OpenApi\Attributes as OA;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -18,6 +19,27 @@ class AuthenticatedSessionController extends Controller
     {
         return view('auth.login');
     }
+
+    #[OA\Post(
+        path: '/api/login',
+        summary: 'Login user',
+        tags: ['Authentication'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email', 'password'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string', format: 'email'),
+                    new OA\Property(property: 'password', type: 'string', format: 'password')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Successful login'),
+            new OA\Response(response: 401, description: 'Invalid credentials'),
+            new OA\Response(response: 422, description: 'Validation error')
+        ]
+    )]
 
     /**
      * Handle an incoming authentication request.
@@ -44,9 +66,16 @@ class AuthenticatedSessionController extends Controller
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
+    #[OA\Post(
+        path: '/api/logout',
+        summary: 'Logout user',
+        security: [['bearerAuth' => []]],
+        tags: ['Authentication'],
+        responses: [
+            new OA\Response(response: 200, description: 'Successful logout'),
+            new OA\Response(response: 401, description: 'Unauthenticated')
+        ]
+    )]
     public function destroy(Request $request)
     {
         if ($request->wantsJson()) {

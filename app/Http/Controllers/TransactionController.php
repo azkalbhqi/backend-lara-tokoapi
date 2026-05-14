@@ -7,9 +7,18 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;
+use OpenApi\Attributes as OA;
 
 class TransactionController extends Controller
 {
+    #[OA\Get(
+        path: '/api/transactions',
+        summary: 'Get all transactions',
+        tags: ['Transactions'],
+        responses: [
+            new OA\Response(response: 200, description: 'Successful operation')
+        ]
+    )]
     public function index(Request $request)
     {
         if ($request->wantsJson()) {
@@ -24,6 +33,32 @@ class TransactionController extends Controller
         return view('transactions.index', compact('transactions'));
     }
 
+    #[OA\Post(
+        path: '/api/transactions/simulate',
+        summary: 'Simulate a transaction',
+        tags: ['Transactions'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['items'],
+                properties: [
+                    new OA\Property(
+                        property: 'items',
+                        type: 'array',
+                        items: new OA\Items(
+                            properties: [
+                                new OA\Property(property: 'product_id', type: 'integer'),
+                                new OA\Property(property: 'quantity', type: 'integer')
+                            ]
+                        )
+                    )
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Simulation result')
+        ]
+    )]
     public function simulate(Request $request)
     {
         if ($request->wantsJson() || $request->isMethod('post')) {
@@ -60,6 +95,41 @@ class TransactionController extends Controller
         $products = Product::where('stock', '>', 0)->get();
         return view('transactions.simulate', compact('products'));
     }
+
+    #[OA\Post(
+        path: '/api/transactions',
+        summary: 'Create a new transaction',
+        security: [['bearerAuth' => []]],
+        tags: ['Transactions'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['items'],
+                properties: [
+                    new OA\Property(
+                        property: 'items',
+                        type: 'array',
+                        items: new OA\Items(
+                            properties: [
+                                new OA\Property(property: 'product_id', type: 'integer'),
+                                new OA\Property(property: 'quantity', type: 'integer')
+                            ]
+                        )
+                    ),
+                    new OA\Property(property: 'customer_name', type: 'string', nullable: true),
+                    new OA\Property(property: 'customer_email', type: 'string', nullable: true)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Transaction created successfully'),
+            new OA\Response(response: 400, description: 'Bad request (e.g., insufficient stock)'),
+            new OA\Response(response: 401, description: 'Unauthenticated')
+        ]
+    )]
+
+
+
 
     public function store(Request $request)
     {

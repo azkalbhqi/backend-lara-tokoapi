@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use OpenApi\Attributes as OA;
 
 class RegisteredUserController extends Controller
 {
@@ -22,6 +23,28 @@ class RegisteredUserController extends Controller
     {
         return view('auth.register');
     }
+
+    #[OA\Post(
+        path: '/api/register',
+        summary: 'Register a new user',
+        tags: ['Authentication'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name', 'email', 'password', 'password_confirmation'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'email', type: 'string', format: 'email'),
+                    new OA\Property(property: 'password', type: 'string', format: 'password'),
+                    new OA\Property(property: 'password_confirmation', type: 'string', format: 'password')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'User registered successfully'),
+            new OA\Response(response: 422, description: 'Validation error')
+        ]
+    )]
 
     /**
      * Handle an incoming registration request.
