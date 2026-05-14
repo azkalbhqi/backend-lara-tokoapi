@@ -28,7 +28,7 @@ class RegisteredUserController extends Controller
      *
      * @throws ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -43,6 +43,17 @@ class RegisteredUserController extends Controller
         ]);
 
         event(new Registered($user));
+
+        if ($request->wantsJson()) {
+            $token = $user->createToken('auth_token')->plainTextToken;
+            return response()->json([
+                'success' => true,
+                'message' => 'Registrasi berhasil',
+                'data' => $user,
+                'access_token' => $token,
+                'token_type' => 'Bearer',
+            ], 201);
+        }
 
         Auth::login($user);
 

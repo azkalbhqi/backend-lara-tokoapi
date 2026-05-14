@@ -201,7 +201,7 @@
                 };
 
                 try {
-                    const response = await fetch('/api/transactions', {
+                    const response = await fetch('/transactions', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
